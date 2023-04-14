@@ -7,15 +7,17 @@ import {IXReceiver} from "@connext/interfaces/core/IXReceiver.sol";
  * @title WstethRateProvider
  * @notice Example destination contract that stores a wstETH rate and only allows source to update it.
  */
-contract WstethRateProvider is IXReceiver {
+contract L2WstETHRateProvider is IXReceiver {
   // The Connext contract on this domain
-  address public immutable connext;
+  address public immutable connext =
+    address(0x5bB83e95f63217CDa6aE3D181BA580Ef377D2109);
 
   // The domain ID where the source contract is deployed
-  uint32 public immutable originDomain;
+  uint32 public immutable originDomain = 6648936; // Domain ID for Ethereum
 
   // The address of the source contract
-  address public immutable source;
+  address public immutable source =
+    address(0xb9f49Cd587d0a607901d4dC577b0b49aF520f3d1);
 
   uint256 private _rate;
 
@@ -36,19 +38,9 @@ contract WstethRateProvider is IXReceiver {
     _;
   }
 
-  constructor(
-    uint32 _originDomain,
-    address _source,
-    address _connext
-  ) {
-    originDomain = _originDomain;
-    source = _source;
-    connext = _connext;
-  }
-
   /** @notice Authenticated receiver function.
-    * @param _callData Calldata containing the new rate.
-    */
+   * @param _callData Calldata containing the new rate.
+   */
   function xReceive(
     bytes32 _transferId,
     uint256 _amount,
@@ -59,20 +51,20 @@ contract WstethRateProvider is IXReceiver {
   ) external onlySource(_originSender, _origin) returns (bytes memory) {
     // Unpack the _callData
     uint256 newRate = abi.decode(_callData, (uint256));
-
     _updateRate(newRate);
   }
 
-  /** @notice Internal function to update the rate.
-    * @param newRate The new rate.
-    */
+  /**
+   * @notice Internal function to update the rate.
+   * @param newRate The new rate.
+   */
   function _updateRate(uint256 newRate) internal {
     _rate = newRate;
   }
 
   /** @notice Public function to get the current rate.
-    * @return The current rate.
-    */
+   * @return The current rate.
+   */
   function getRate() public view returns (uint256) {
     return _rate;
   }
